@@ -2,6 +2,7 @@ import os
 import glob
 import shutil
 import pickle
+import logging
 import img2pdf
 import requests
 from tqdm import tqdm
@@ -70,13 +71,19 @@ request_headers = {'User-agent': 'Mozilla/5.0',
 
 if not os.path.exists(working_dir):
     os.makedirs(working_dir)
-
+    with open(os.path.join(working_dir, "latest.log"), "w") as file:
+        pass
+logging.basicConfig(format='%(asctime)s - %(message)s',
+                    filename=os.path.join(working_dir, "latest.log"), level=logging.INFO)
+logging.info("Started")
 
 # Getting image URLs
-if os.path.exists(os.path.join(working_dir, "image_urls")):
-    with open(os.path.join(working_dir, "image_urls"), "rb") as file:
+if os.path.exists(os.path.join(working_dir, "image_urls.txt")):
+    logging.info("Image URLs loaded")
+    with open(os.path.join(working_dir, "image_urls.txt"), "rb") as file:
         image_urls = pickle.load(file)
 else:
+    logging.info("Generating image URLs")
     image_urls = []
     for episode_no in loading_bar(download_range, "links"):
         url = get_full_url(title_no, episode_no)
@@ -85,8 +92,10 @@ else:
         for img in soup.find(id="_imageList").find_all("img"):
             image_urls.append(img.get("data-url"))
     image_urls = list(enumerate(image_urls))
+    logging.info("Finished generating image URLs")
     with open(os.path.join(working_dir, "image_urls"), "wb") as file:
         pickle.dump(image_urls, file)
+    logging.info("Saved image URLs to file")
 
 
 # Saving files
@@ -96,8 +105,10 @@ if glob.glob(f"{working_dir}/*.{webtoon_filetype}") != []:  # If old files found
                  for filename in filenames]
     image_nos.sort()
     last_downloaded_image = image_nos[-1]
-    image_urls = image_urls[last_downloaded_image:]
+    image_urls = image_urls[last_downloaded_image-1:]
+    logging.info(f"Old files found, resuming from {last_downloaded_image}")
 
+logging.info("Downloading images")
 for index, image_url in loading_bar(image_urls, "images"):
     filename = f"{index}.{webtoon_filetype}"
     request = requests.get(image_url, stream=True, headers=request_headers)
@@ -105,14 +116,25 @@ for index, image_url in loading_bar(image_urls, "images"):
         with open(os.path.join(working_dir, filename), 'wb') as file:
             request.raw.decode_content = True
             shutil.copyfileobj(request.raw, file)
+            logging.info(f"File {filename} downloaded successfully")
     else:
-        # TODO: error handling, tryagain
-        pass
+        # TODO: tryagain//exception
+        logging.warning("Request error")
 
 
 # Saving PDF
 if pdf:
+    logging.info("Saving PDF")
     # TODO: individual PDFs for each ep
-    file_paths = glob.glob(f"{working_dir}/*.{webtoon_filetype}")
+    filenames = glob.glob(f"{working_dir}/*.{webtoon_filetype}")
+    image_nos = [int(filename.split("\\")[1].split(".")[0])
+                 for filename in filenames]
+    filenames = dict(zip(filenames, image_nos))
+    sorted_filenames = list(
+        zip(*sorted(filenames.items(), key=lambda kv: kv[1])))[0]
+    print(sorted_filenames)
     with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
-        file.write(img2pdf.convert(file_paths))
+        file.write(img2pdf.convert(sorted_filenames))
+    logging.info("Finished saving PDF")
+
+logging.info("Complete, exiting")
