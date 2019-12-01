@@ -6,10 +6,8 @@ import requests
 import urllib.parse as urlparse
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-from urllib.request import urlopen, urlretrieve, Request
 
 # TODO: log
-# TODO: migrate urllib to requests
 # TODO: make into module, web api
 
 
@@ -37,7 +35,7 @@ def loading_bar(iterable, unit):
 
 def get_title(url):
     if not canvas:
-        webpage = urlopen(url).read()
+        webpage = requests.get(url).content
         title = str(webpage).split('<title>')[1].split('</title>')[0]
         return title
     else:
@@ -58,7 +56,7 @@ def get_full_url(title_no, episode_no):
 # Variables
 download_range = list(range(1, 3))
 pdf = True
-title_no = "219164"
+title_no = "1499"
 canvas = is_canvas(title_no)
 title = get_title(get_full_url(title_no, "1")).split(" | ")[1]
 document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
@@ -81,7 +79,7 @@ else:
 image_urls = []
 for episode_no in loading_bar(download_range, "links"):
     url = get_full_url(title_no, episode_no)
-    soup = BeautifulSoup(urlopen(url).read(), features=bs4_htmlparser)
+    soup = BeautifulSoup(requests.get(url).content, features=bs4_htmlparser)
 
     for img in soup.find(id="_imageList").find_all("img"):
         image_urls.append(img.get("data-url"))
