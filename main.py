@@ -1,14 +1,15 @@
 import os
 import glob
 import shutil
+import pickle
 import img2pdf
 import requests
-import urllib.parse as urlparse
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 
 # TODO: log
 # TODO: make into module, web api
+# TODO: account for deleted eps (https://github.com/devsnek/webtoondl/issues/3)
 
 
 def is_canvas(title_no):
@@ -67,29 +68,38 @@ request_headers = {'User-agent': 'Mozilla/5.0',
                    "Referer": get_full_url(title_no, "1")}
 
 
-if os.path.exists(working_dir):
-    # Resume progress
-    # TODO: progress saving info file
-    pass
-else:
+if not os.path.exists(working_dir):
     os.makedirs(working_dir)
 
 
 # Getting image URLs
-image_urls = []
-for episode_no in loading_bar(download_range, "links"):
-    url = get_full_url(title_no, episode_no)
-    soup = BeautifulSoup(requests.get(url).content, features=bs4_htmlparser)
-
-    for img in soup.find(id="_imageList").find_all("img"):
-        image_urls.append(img.get("data-url"))
-# TODO: save progress
+if os.path.exists(os.path.join(working_dir, "image_urls")):
+    with open(os.path.join(working_dir, "image_urls"), "rb") as file:
+        image_urls = pickle.load(file)
+else:
+    image_urls = []
+    for episode_no in loading_bar(download_range, "links"):
+        url = get_full_url(title_no, episode_no)
+        soup = BeautifulSoup(requests.get(url).content,
+                             features=bs4_htmlparser)
+        for img in soup.find(id="_imageList").find_all("img"):
+            image_urls.append(img.get("data-url"))
+    image_urls = list(enumerate(image_urls))
+    with open(os.path.join(working_dir, "image_urls"), "wb") as file:
+        pickle.dump(image_urls, file)
 
 
 # Saving files
-for index, image_url in loading_bar(enumerate(image_urls), "images"):
-    filename = f"{index}.{webtoon_filetype}"
+if glob.glob(f"{working_dir}/*.{webtoon_filetype}") != []:  # If old files found
+    filenames = glob.glob(f"{working_dir}/*.{webtoon_filetype}")
+    image_nos = [int(filename.split("\\")[1].split(".")[0])
+                 for filename in filenames]
+    image_nos.sort()
+    last_downloaded_image = image_nos[-1]
+    image_urls = image_urls[last_downloaded_image:]
 
+for index, image_url in loading_bar(image_urls, "images"):
+    filename = f"{index}.{webtoon_filetype}"
     request = requests.get(image_url, stream=True, headers=request_headers)
     if request.status_code == 200:
         with open(os.path.join(working_dir, filename), 'wb') as file:
