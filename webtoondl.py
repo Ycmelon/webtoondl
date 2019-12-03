@@ -39,14 +39,14 @@ def loading_bar(iterable, unit):
 
 
 def get_title(url, title_no, canvas):
+    webpage = requests.get(url).content
     if not canvas:
-        webpage = requests.get(url).content
         title = str(webpage).split('<title>')[1].split('</title>')[0]
-        return title.split(" | ")[1]
+        title = title.split(" | ")[1]
     else:
-        # TODO: get title name for canvas
-        title = title_no
-        return title
+        soup = BeautifulSoup(webpage, features=bs4_htmlparser)
+        title = soup.select("a.subj")[0].text
+    return title
 
 
 def get_full_url(title_no, episode_no, canvas):
@@ -180,4 +180,4 @@ def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
         shutil.rmtree(working_dir)
 
 
-download(70280, range(1, 13), clean=False, pdf="separate")
+download(70280, range(1, 13), clean=False, pdf="combined")
