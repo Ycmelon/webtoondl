@@ -57,7 +57,7 @@ def get_full_url(title_no, episode_no, canvas):
     return url
 
 
-def download(title_no, download_range, pdf=True, working_dir=False):
+def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
     download_range = list(download_range)
     canvas = is_canvas(title_no)
     title = get_title(get_full_url(title_no, "1", canvas), title_no, canvas)
@@ -136,8 +136,11 @@ def download(title_no, download_range, pdf=True, working_dir=False):
         with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
             file.write(img2pdf.convert(sorted_filenames))
             logging.info("Finished saving PDF")
-            output = file
+            shutil.copyfile(os.path.join(working_dir, f"{document_name}.pdf"), os.path.join(
+                os.path.dirname(working_dir), f"{document_name}.pdf"))
 
     logging.info("Complete, exiting")
-    if pdf:
-        return output
+    logging.shutdown()
+
+    if clean:
+        shutil.rmtree(working_dir)
