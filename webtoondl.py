@@ -8,8 +8,6 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 
-# TODO: add cli
-# TODO: make into web api
 
 webtoon_filetype = "jpg"  # if changed in future
 bs4_htmlparser = "html.parser"  # other os
