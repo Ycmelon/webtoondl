@@ -1,2 +1,2 @@
 # Webtoondl
-Webtoon downloader
+Webtoon downloader module
