@@ -8,10 +8,11 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 
-# TODO: make into module, web api
-# TODO: account for deleted eps (https://github.com/devsnek/webtoondl/issues/3)
+# TODO: add cli
+# TODO: make into web api
+
 webtoon_filetype = "jpg"  # if changed in future
-bs4_htmlparser = "html.parser"
+bs4_htmlparser = "html.parser"  # other os
 
 
 def is_canvas(title_no):
@@ -57,6 +58,7 @@ def get_full_url(title_no, episode_no, canvas):
 
 
 def download(title_no, download_range, pdf=True, working_dir=False):
+    download_range = list(download_range)
     canvas = is_canvas(title_no)
     title = get_title(get_full_url(title_no, "1", canvas), title_no, canvas)
     document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
@@ -75,9 +77,9 @@ def download(title_no, download_range, pdf=True, working_dir=False):
     logging.info("Started")
 
     # Getting image URLs
-    if os.path.exists(os.path.join(working_dir, "image_urls.txt")):
+    if os.path.exists(os.path.join(working_dir, "image_urls")):
         logging.info("Image URLs loaded")
-        with open(os.path.join(working_dir, "image_urls.txt"), "rb") as file:
+        with open(os.path.join(working_dir, "image_urls"), "rb") as file:
             image_urls = pickle.load(file)
     else:
         logging.info("Generating image URLs")
