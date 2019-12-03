@@ -1,4 +1,4 @@
-# Webtoondl
+# WIP: Webtoondl
 Webtoon downloader module
 ## Sample usage
 ```
