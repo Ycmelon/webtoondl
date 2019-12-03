@@ -8,7 +8,6 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 
-# TODO: log
 # TODO: make into module, web api
 # TODO: account for deleted eps (https://github.com/devsnek/webtoondl/issues/3)
 
@@ -39,7 +38,7 @@ def get_title(url):
     if not canvas:
         webpage = requests.get(url).content
         title = str(webpage).split('<title>')[1].split('</title>')[0]
-        return title
+        return title.split(" | ")[1]
     else:
         # TODO: get title name for canvas
         title = title_no
@@ -56,11 +55,11 @@ def get_full_url(title_no, episode_no):
 
 
 # Variables
-download_range = list(range(1, 3))
+download_range = list(range(1, 132))
 pdf = True
-title_no = "1499"
+title_no = "70280"
 canvas = is_canvas(title_no)
-title = get_title(get_full_url(title_no, "1")).split(" | ")[1]
+title = get_title(get_full_url(title_no, "1"))
 document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
 working_dir = os.path.join("output/", document_name)
 webtoon_filetype = "jpg"  # if changed in future
@@ -87,6 +86,10 @@ else:
     image_urls = []
     for episode_no in loading_bar(download_range, "links"):
         url = get_full_url(title_no, episode_no)
+        if requests.get(url).status_code == 404:
+            logging.info(f"404 for episode {episode_no}")
+            download_range.append(download_range[-1]+1)
+            continue
         soup = BeautifulSoup(requests.get(url).content,
                              features=bs4_htmlparser)
         for img in soup.find(id="_imageList").find_all("img"):
@@ -132,7 +135,6 @@ if pdf:
     filenames = dict(zip(filenames, image_nos))
     sorted_filenames = list(
         zip(*sorted(filenames.items(), key=lambda kv: kv[1])))[0]
-    print(sorted_filenames)
     with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
         file.write(img2pdf.convert(sorted_filenames))
     logging.info("Finished saving PDF")
