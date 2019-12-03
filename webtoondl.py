@@ -12,6 +12,8 @@ from bs4 import BeautifulSoup
 output_folder = "output"
 webtoon_filetype = "jpg"  # if changed in future (WEBP revolution???)
 bs4_htmlparser = "html.parser"  # other os
+image_urls_savelocation = "image_urls.dat"
+progress_savelocation = "progress.dat"
 
 
 def is_canvas(title_no):
@@ -76,9 +78,9 @@ def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
     logging.info("Started")
 
     # Getting image URLs
-    if os.path.exists(os.path.join(working_dir, "image_urls.dat")):
+    if os.path.exists(os.path.join(working_dir, image_urls_savelocation)):
         logging.info("Image URLs loaded")
-        with open(os.path.join(working_dir, "image_urls.dat"), "rb") as file:
+        with open(os.path.join(working_dir, image_urls_savelocation), "rb") as file:
             image_urls = pickle.load(file)
     else:
         logging.info("Generating image URLs")
@@ -95,45 +97,43 @@ def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
             for img in soup.find(id="_imageList").find_all("img"):
                 image_urls[episode_no].append(img.get("data-url"))
         logging.info("Finished generating image URLs")
-        with open(os.path.join(working_dir, "image_urls.dat"), "wb") as file:
+        with open(os.path.join(working_dir, image_urls_savelocation), "wb") as file:
             pickle.dump(image_urls, file)
         logging.info("Saved image URLs to file")
 
-    # TODO: Check for old files (from an info file.)
-    '''
-    subdirectories = os.walk(working_dir)[0][1]
-    for episode in subdirectories:
-        if glob.glob(f"{working_dir}/{episode}/*.{webtoon_filetype}") != []:  # If old files found
-            filenames = glob.glob(f"{working_dir}/*.{webtoon_filetype}")
-            image_nos = [int(filename.split("\\")[1].split(".")[0])
-                        for filename in filenames]
-            image_nos.sort()
-            last_downloaded_image = image_nos[-1]
-            image_urls = image_urls[last_downloaded_image-1:]
-            logging.info(f"Old files found, resuming from {last_downloaded_image}")
-    '''
-
     # Saving files
+    if os.path.exists(os.path.join(working_dir, progress_savelocation)):
+        with open(os.path.join(working_dir, progress_savelocation), "r") as progress_file:
+            progress = progress_file.read().split("\n")
+            progress.remove("")
+            progress = [int(episode_no) for episode_no in progress]
+            if not progress == None:
+                for finished_ep in progress:
+                    del image_urls[finished_ep]
+
     logging.info("Downloading images")
-    for episode_no, image_urls in loading_bar(image_urls.items(), "images"):
-        # Create episode folder
-        if not os.path.exists(os.path.join(working_dir, str(episode_no))):
-            os.makedirs(os.path.join(working_dir, str(episode_no)))
+    with open(os.path.join(working_dir, progress_savelocation), "a+") as progress_file:
+        for episode_no, image_urls in loading_bar(image_urls.items(), "images"):
+            # Create episode folder
+            if not os.path.exists(os.path.join(working_dir, str(episode_no))):
+                os.makedirs(os.path.join(working_dir, str(episode_no)))
 
-        for index, image_url in enumerate(image_urls):
-            filename = f"{episode_no}-{index}.{webtoon_filetype}"
+            for index, image_url in enumerate(image_urls):
+                filename = f"{episode_no}-{index}.{webtoon_filetype}"
 
-            request = requests.get(
-                image_url, stream=True, headers=request_headers)
-            if request.status_code == 200:
-                with open(os.path.join(working_dir, str(episode_no), filename), 'wb') as file:
-                    request.raw.decode_content = True
-                    shutil.copyfileobj(request.raw, file)
-                    logging.info(
-                        f"File {filename} downloaded successfully")
-            else:
-                # TODO: tryagain//exception
-                logging.warning("Request error")
+                request = requests.get(
+                    image_url, stream=True, headers=request_headers)
+                if request.status_code == 200:
+                    with open(os.path.join(working_dir, str(episode_no), filename), 'wb') as file:
+                        request.raw.decode_content = True
+                        shutil.copyfileobj(request.raw, file)
+
+                        logging.info(
+                            f"File {filename} downloaded successfully")
+                else:
+                    # TODO: tryagain//exception
+                    logging.warning("Request error")
+            progress_file.write(f"\n{episode_no}")
 
     # Saving PDF
     if pdf:
