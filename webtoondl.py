@@ -71,7 +71,7 @@ def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
         with open(os.path.join(working_dir, "latest.log"), "w") as file:
             pass
 
-    logging.basicConfig(format='%(asctime)s - %(message)s',
+    logging.basicConfig(format='%(asctime)s - %(levelname)s:%(message)s',
                         filename=os.path.join(working_dir, "latest.log"), level=logging.INFO)
     logging.info("Started")
 
@@ -180,4 +180,4 @@ def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
         shutil.rmtree(working_dir)
 
 
-download(70280, range(1, 13), clean=False, pdf="combined")
+download(70280, range(1, 13), clean=False, pdf="separate")
