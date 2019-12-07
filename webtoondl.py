@@ -113,7 +113,7 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
 
     logging.info("Downloading images")
     with open(os.path.join(working_dir, progress_savelocation), "a+") as progress_file:
-        for episode_no, image_urls in loading_bar(image_urls.items(), "images"):
+        for episode_no, image_urls in loading_bar(image_urls.items(), "episodes"):
             # Create episode folder
             if not os.path.exists(os.path.join(working_dir, str(episode_no))):
                 os.makedirs(os.path.join(working_dir, str(episode_no)))
