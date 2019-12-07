@@ -58,7 +58,7 @@ def get_full_url(title_no, episode_no, canvas):
     return url
 
 
-def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
+def download(title_no, download_range, output="combined", working_dir=False, clean=True):
     download_range = list(download_range)
     canvas = is_canvas(title_no)
     title = get_title(get_full_url(title_no, "1", canvas), title_no, canvas)
@@ -135,42 +135,44 @@ def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
                     logging.warning("Request error")
             progress_file.write(f"\n{episode_no}")
 
-    # Saving PDF
-    if pdf:
-        logging.info("Saving PDF")
-        episode_folders = list(os.walk(working_dir))[0][1]
-        episode_folders = sorted([int(episode) for episode in episode_folders])
+    # Saving
+    logging.info("Saving files")
+    episode_folders = list(os.walk(working_dir))[0][1]
+    episode_folders = sorted([int(episode) for episode in episode_folders])
 
-        if pdf == "separate":
-            for folder in loading_bar(episode_folders, "pdfs"):
-                filenames = glob.glob(
-                    f"{working_dir}/{folder}/*.{webtoon_filetype}")
-                image_nos = [filename.split("\\")[-1].split(".")[0]
-                             for filename in filenames]
-                filenames = dict(zip(filenames, image_nos))
-                sorted_filenames = list(
-                    zip(*sorted(filenames.items(), key=lambda kv: kv[1])))[0]
-                with open(os.path.join(working_dir, f"{folder}.pdf"), "wb") as file:
-                    file.write(img2pdf.convert(sorted_filenames))
-                    logging.info(f"Finished saving episode {folder} PDF")
+    if output == "separate":
+        for folder in loading_bar(episode_folders, "pdfs"):
+            filenames = glob.glob(
+                f"{working_dir}/{folder}/*.{webtoon_filetype}")
+            image_nos = [filename.split("\\")[-1].split(".")[0]
+                         for filename in filenames]
+            filenames = dict(zip(filenames, image_nos))
+            sorted_filenames = list(
+                zip(*sorted(filenames.items(), key=lambda kv: kv[1])))[0]
+            with open(os.path.join(working_dir, f"{folder}.pdf"), "wb") as file:
+                file.write(img2pdf.convert(sorted_filenames))
+                logging.info(f"Finished saving episode {folder} PDF")
 
-        elif pdf == "combined":
-            all_filenames = []
-            all_image_nos = []
-            for folder in episode_folders:
-                filenames = glob.glob(
-                    f"{working_dir}/{folder}/*.{webtoon_filetype}")
-                image_nos = [filename.split("\\")[-1].split(".")[0]
-                             for filename in filenames]
-                all_filenames.extend(filenames)
-                all_image_nos.extend(image_nos)
-            with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
-                file.write(img2pdf.convert(all_filenames))
-                logging.info(f"Finished saving {document_name} PDF")
+    elif output == "combined":
+        all_filenames = []
+        all_image_nos = []
+        for folder in episode_folders:
+            filenames = glob.glob(
+                f"{working_dir}/{folder}/*.{webtoon_filetype}")
+            image_nos = [filename.split("\\")[-1].split(".")[0]
+                         for filename in filenames]
+            all_filenames.extend(filenames)
+            all_image_nos.extend(image_nos)
+        with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
+            file.write(img2pdf.convert(all_filenames))
+            logging.info(f"Finished saving {document_name} PDF")
 
-        else:
-            logging.error("PDF option not recognised!")
-            raise Exception("PDF option not recognised!")
+    elif output == "images":
+        pass
+
+    else:
+        logging.error("PDF option not recognised!")
+        raise Exception("PDF option not recognised!")
 
     logging.info("Complete, exiting")
     logging.shutdown()
@@ -180,4 +182,4 @@ def download(title_no, download_range, pdf=True, working_dir=False, clean=True):
         shutil.rmtree(working_dir)
 
 
-download(70280, range(1, 13), clean=False, pdf="combined")
+download(70280, range(1, 13), clean=False, output="combined")
