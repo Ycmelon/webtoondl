@@ -7,6 +7,7 @@ import img2pdf
 import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
+from zipfile import ZipFile
 
 
 output_folder = "output"
@@ -153,6 +154,14 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
                 file.write(img2pdf.convert(sorted_filenames))
                 logging.info(f"Finished saving episode {folder} PDF")
 
+        # Returning
+        output_path = os.path.join(output_folder, f"{document_name}.zip")
+        with ZipFile(output_path, "w") as output_archive:
+            for pdf in glob.glob(f"{working_dir}/*.pdf"):
+                output_archive.write(pdf, pdf.split(working_dir)[1])
+        return_output = output_path
+        logging.info("Zipped archive")
+
     elif output == "combined":
         all_filenames = []
         for folder in episode_folders:
@@ -167,12 +176,20 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
             temp = list(zip(*temp))[1]
 
             all_filenames.extend(temp)
-        with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
+
+        output_path = os.path.join(output_folder, f"{document_name}.pdf")
+        with open(output_path, "wb") as file:
             file.write(img2pdf.convert(all_filenames))
             logging.info(f"Finished saving {document_name} PDF")
+        return_output = output_path
 
     elif output == "images":
-        pass
+        output_path = os.path.join(output_folder, f"{document_name}.zip")
+        with ZipFile(output_path, "w") as output_archive:
+            for jpg in glob.glob(f"{working_dir}/**/*.{webtoon_filetype}"):
+                output_archive.write(jpg, jpg.split(document_name)[1])
+        return_output = output_path
+        logging.info("Zipped archive")
 
     else:
         logging.error("Output option not recognised!")
@@ -185,5 +202,7 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         # TODO: fix clean (dont remove pdfs :/)
         shutil.rmtree(working_dir)
 
+    return return_output
 
-download(1499, range(1, 20), clean=False, output="combined")
+
+download(1499, range(1, 20), clean=False, output="separate")
