@@ -159,9 +159,15 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         for folder in episode_folders:
             filenames = glob.glob(
                 f"{working_dir}/{folder}/*.{webtoon_filetype}")
-            image_nos = [filename.split("\\")[-1].split(".")[0]
+            image_nos = [int(filename.split("\\")[-1].split(".")[0].split("-")[1])
                          for filename in filenames]
-            all_filenames.extend(filenames)
+
+            # Sorting
+            temp = list(zip(image_nos, filenames))
+            temp = sorted(temp, key=lambda kv: kv[0])
+            temp = list(zip(*temp))[1]
+
+            all_filenames.extend(temp)
             all_image_nos.extend(image_nos)
         with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
             file.write(img2pdf.convert(all_filenames))
@@ -171,8 +177,8 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         pass
 
     else:
-        logging.error("PDF option not recognised!")
-        raise Exception("PDF option not recognised!")
+        logging.error("Output option not recognised!")
+        raise Exception("Output option not recognised!")
 
     logging.info("Complete, exiting")
     logging.shutdown()
@@ -182,4 +188,4 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         shutil.rmtree(working_dir)
 
 
-download(70280, range(1, 13), clean=False, output="combined")
+download(1499, range(1, 20), clean=False, output="combined")
