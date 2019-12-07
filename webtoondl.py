@@ -199,10 +199,9 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
     logging.shutdown()
 
     if clean:
-        # TODO: fix clean (dont remove pdfs :/)
         shutil.rmtree(working_dir)
 
     return return_output
 
 
-download(1499, range(1, 20), clean=False, output="separate")
+print(download(1499, range(1, 20), output="separate"))
