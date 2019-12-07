@@ -155,7 +155,6 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
 
     elif output == "combined":
         all_filenames = []
-        all_image_nos = []
         for folder in episode_folders:
             filenames = glob.glob(
                 f"{working_dir}/{folder}/*.{webtoon_filetype}")
@@ -168,7 +167,6 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
             temp = list(zip(*temp))[1]
 
             all_filenames.extend(temp)
-            all_image_nos.extend(image_nos)
         with open(os.path.join(working_dir, f"{document_name}.pdf"), "wb") as file:
             file.write(img2pdf.convert(all_filenames))
             logging.info(f"Finished saving {document_name} PDF")
