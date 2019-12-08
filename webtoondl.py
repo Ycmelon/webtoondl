@@ -19,6 +19,18 @@ progress_savelocation = "progress.dat"
 
 
 def is_canvas(title_no):
+    """Returns whether given title number is CANVAS
+
+    Args:
+        title_no(str): Title number of series to check
+
+    Returns:
+        bool: Whether given title number is CANVAS
+
+    Raises:
+        ValueError: Webtoon title number is not found
+    """
+
     # Not canvas
     output = False
     url = f"https://www.webtoons.com/en/fantasy/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no=1"
@@ -31,16 +43,36 @@ def is_canvas(title_no):
     # Error
     if requests.get(url).status_code == 404:
         output = False
-        raise Exception("Webtoon not found!")
+        raise ValueError("Webtoon not found!")
 
     return output
 
 
 def loading_bar(iterable, unit):
+    """Generates loading bar for iterable
+
+    Args:
+        iterable(iterable): Iterable to generate a loading bar for
+        unit(str): Unit of iterable to display
+
+    Returns:
+        TQDM loading bar
+    """
+
     return tqdm(iterable, unit=unit, ncols=100)
 
 
-def get_title(url, title_no, canvas):
+def get_title(url, canvas):
+    """Gets title for given title number
+
+    Args:
+        url(str): URL of webpage to get title from
+        canvas(bool): Whether series is canvas or not
+
+    Returns:
+        str: Title of given series number
+    """
+
     webpage = requests.get(url).content
     if not canvas:
         title = str(webpage).split('<title>')[1].split('</title>')[0]
@@ -52,6 +84,17 @@ def get_title(url, title_no, canvas):
 
 
 def get_full_url(title_no, episode_no, canvas):
+    """Gets full URL for given title and episode numbers
+
+    Args:
+        title_no(str): Title number of series to get URL for
+        episode_no(str): Episode number to get URL for
+        canvas(bool): Whether the given series is CANVAS or not
+
+    Retuns:
+        str: Full URL given the title and episode numbers
+    """
+
     if not canvas:
         url = f"https://www.webtoons.com/en/fantasy/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no={episode_no}"
     else:
@@ -61,6 +104,16 @@ def get_full_url(title_no, episode_no, canvas):
 
 
 def search_webtoon(query):
+    """Searches Webtoon for given query to find series
+
+    Args:
+        query(str): Search query
+
+    Returns:
+        bool: False if there are no results
+        dict: Dictionary containing the search results
+    """
+
     url = f"https://www.webtoons.com/search?keyword={query}"
     url = requests.utils.requote_uri(url)
 
@@ -95,15 +148,36 @@ def search_webtoon(query):
 
 
 def download(title_no, download_range, output="combined", working_dir=False, clean=True, unique=False):
+    """Download webtoons
+
+    Args:
+        title_no(str): Title number of series to download
+        download_range(iterable): Range of episodes to download
+        output(str): Output format
+            "combined": Combined PDF
+            "separate": Zipped separate PDFs
+            "images": Zipped image files
+        working_dir(str): Custom working directory
+        clean(bool): Whether to cleanup working files
+        unique(bool): Whether to create custom ID for unique filename
+
+    Returns:
+        str: Path to output file
+
+    Raises:
+        ValueError: Output format not recognised
+    """
+
     download_range = list(download_range)
     canvas = is_canvas(title_no)
-    title = get_title(get_full_url(title_no, "1", canvas), title_no, canvas)
+    title = get_title(get_full_url(title_no, "1", canvas), canvas)
     document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
     if unique:
         id_ = datetime.now().strftime("%d%m%Y%H%M%S%f")
         document_name = f"{document_name} {id_}"
     request_headers = {'User-agent': 'Mozilla/5.0',
                        "Referer": get_full_url(title_no, "1", canvas)}
+
     if not working_dir:
         working_dir = os.path.join(output_folder, document_name)
 
@@ -231,7 +305,7 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
 
     else:
         logging.error("Output option not recognised!")
-        raise Exception("Output option not recognised!")
+        raise ValueError("Output option not recognised!")
 
     logging.info("Complete, exiting")
     logging.shutdown()
