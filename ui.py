@@ -1,10 +1,10 @@
 import webtoondl
 import os
 
-version = "1.0"
+version = "1.0.0"
 
-print(f"WEBTOONDL v{version}")
-
+print(f"WEBTOONDL v{version} by Ycmelon")
+print("Github: https://github.com/Ycmelon/webtoondl")
 # Getting webtoon information
 search_query = input("Webtoon name: ")
 search_results = webtoondl.search_webtoon(search_query)
