@@ -8,6 +8,7 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from zipfile import ZipFile
+from datetime import datetime
 
 
 output_folder = "output"
@@ -93,11 +94,14 @@ def search_webtoon(query):
     return results
 
 
-def download(title_no, download_range, output="combined", working_dir=False, clean=True):
+def download(title_no, download_range, output="combined", working_dir=False, clean=True, unique=False):
     download_range = list(download_range)
     canvas = is_canvas(title_no)
     title = get_title(get_full_url(title_no, "1", canvas), title_no, canvas)
     document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
+    if unique:
+        id_ = datetime.now().strftime("%d%m%Y%H%M%S%f")
+        document_name = f"{document_name} {id_}"
     request_headers = {'User-agent': 'Mozilla/5.0',
                        "Referer": get_full_url(title_no, "1", canvas)}
     if not working_dir:
@@ -236,3 +240,6 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         shutil.rmtree(working_dir)
 
     return return_output
+
+
+download(1499, range(1, 5))
