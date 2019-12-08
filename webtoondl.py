@@ -169,6 +169,7 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
 
     Raises:
         ValueError: Output format not recognised
+        Exception: Status code 200 for request
     """
 
     download_range = list(download_range)
@@ -247,8 +248,8 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
                         logging.info(
                             f"File {filename} downloaded successfully")
                 else:
-                    # TODO: tryagain//exception
-                    logging.warning("Request error")
+                    logging.warning("Request error: 200")
+                    raise Exception("Request error: 200")
             progress_file.write(f"\n{episode_no}")
 
     # Saving
