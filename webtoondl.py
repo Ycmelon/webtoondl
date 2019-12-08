@@ -125,24 +125,27 @@ def search_webtoon(query):
     # If originals results present
     if soup.find(class_="card_lst"):
         for a in soup.find(class_="card_lst").find_all("a"):
+            title_no_ = a["href"].split("=")[1]
             img_src = a.find("img")["src"]
             subj = a.find(class_="subj").text
             author = a.find(class_="author").text
             likes = a.find(class_="grade_num").text
             if likes == "Like":
                 likes = 0
-            results["originals"].append([img_src, subj, author, likes])
+            results["originals"].append(
+                [title_no_, img_src, subj, author, likes])
 
     # If canvas results present
     if soup.find(class_="challenge_lst"):
         for a in soup.find(class_="challenge_lst").find("ul").find_all("a"):
+            title_no_ = a["href"].split("=")[1]
             img_src = a.find("img")["src"]
             subj = a.find(class_="subj").text
             author = a.find(class_="author").text
             likes = a.find(class_="grade_num").text
             if likes == "Like":
                 likes = 0
-            results["canvas"].append([img_src, subj, author, likes])
+            results["canvas"].append([title_no_, img_src, subj, author, likes])
 
     return results
 
@@ -314,6 +317,3 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         shutil.rmtree(working_dir)
 
     return return_output
-
-
-download(1499, range(1, 5))
