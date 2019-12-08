@@ -62,43 +62,46 @@ def loading_bar(iterable, unit):
     return tqdm(iterable, unit=unit, ncols=100)
 
 
-def get_title(url, canvas):
+def get_title(title_no, canvas):
     """Gets title for given title number
 
     Args:
-        url(str): URL of webpage to get title from
+        title_no(str): Title number of series to get title of
         canvas(bool): Whether series is canvas or not
 
     Returns:
         str: Title of given series number
     """
-
+    url = get_full_url(title_no, canvas)
     webpage = requests.get(url).content
-    if not canvas:
-        title = str(webpage).split('<title>')[1].split('</title>')[0]
-        title = title.split(" | ")[1]
-    else:
-        soup = BeautifulSoup(webpage, features=bs4_htmlparser)
-        title = soup.select("a.subj")[0].text
+
+    title = str(webpage).split('<title>')[1].split('</title>')[0]
+    title = title.split(" | ")[0]
+
     return title
 
 
-def get_full_url(title_no, episode_no, canvas):
+def get_full_url(title_no, canvas, episode_no=0):
     """Gets full URL for given title and episode numbers
 
     Args:
         title_no(str): Title number of series to get URL for
-        episode_no(str): Episode number to get URL for
         canvas(bool): Whether the given series is CANVAS or not
+        episode_no(str): Episode number to get URL for
 
     Retuns:
         str: Full URL given the title and episode numbers
     """
 
-    if not canvas:
-        url = f"https://www.webtoons.com/en/fantasy/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no={episode_no}"
+    if canvas:
+        genre = "challenge"
     else:
-        url = f"https://www.webtoons.com/en/challenge/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no={episode_no}"
+        genre = "fantasy"
+
+    if not episode_no == 0:
+        url = f"https://www.webtoons.com/en/{genre}/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no={episode_no}"
+    else:
+        url = f"https://www.webtoons.com/en/{genre}/castle-swimmer/list?title_no={title_no}"
 
     return url
 
@@ -117,7 +120,7 @@ def search_webtoon(query):
     url = f"https://www.webtoons.com/search?keyword={query}"
     url = requests.utils.requote_uri(url)
 
-    soup = BeautifulSoup(requests.get(url).content)
+    soup = BeautifulSoup(requests.get(url).content, features=bs4_htmlparser)
     if soup.find(class_="card_nodata"):
         return False
 
@@ -133,7 +136,7 @@ def search_webtoon(query):
             if likes == "Like":
                 likes = 0
             results["originals"].append(
-                [title_no_, img_src, subj, author, likes])
+                [title_no_, img_src, subj, author, likes, "original"])
 
     # If canvas results present
     if soup.find(class_="challenge_lst"):
@@ -145,9 +148,28 @@ def search_webtoon(query):
             likes = a.find(class_="grade_num").text
             if likes == "Like":
                 likes = 0
-            results["canvas"].append([title_no_, img_src, subj, author, likes])
+            results["canvas"].append(
+                [title_no_, img_src, subj, author, likes, "canvas"])
 
     return results
+
+
+def get_last_episode(title_no, canvas):
+    """Get last episode number
+
+    Args:
+        title_no(str): Title number of series
+        canvas(bool): Whether given series is canvas or not
+
+    Returns:
+        str: Last episode number
+    """
+
+    url = get_full_url(title_no, canvas)
+    soup = BeautifulSoup(requests.get(url).content, features=bs4_htmlparser)
+    last_episode = soup.find(id="_listUl").find("li")["data-episode-no"]
+
+    return last_episode
 
 
 def download(title_no, download_range, output="combined", working_dir=False, clean=True, unique=False):
@@ -174,13 +196,13 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
 
     download_range = list(download_range)
     canvas = is_canvas(title_no)
-    title = get_title(get_full_url(title_no, "1", canvas), canvas)
+    title = get_title(title_no, canvas)
     document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
     if unique:
         id_ = datetime.now().strftime("%d%m%Y%H%M%S%f")
         document_name = f"{document_name} {id_}"
     request_headers = {'User-agent': 'Mozilla/5.0',
-                       "Referer": get_full_url(title_no, "1", canvas)}
+                       "Referer": get_full_url(title_no, canvas, "1")}
 
     if not working_dir:
         working_dir = os.path.join(output_folder, document_name)
@@ -203,7 +225,7 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         logging.info("Generating image URLs")
         image_urls = {}
         for episode_no in loading_bar(download_range, "links"):
-            url = get_full_url(title_no, episode_no, canvas)
+            url = get_full_url(title_no, canvas, episode_no)
             if requests.get(url).status_code == 404:
                 logging.info(f"404 for episode {episode_no}")
                 download_range.append(download_range[-1]+1)
@@ -318,3 +340,6 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         shutil.rmtree(working_dir)
 
     return return_output
+
+
+get_last_episode(262985, True)
