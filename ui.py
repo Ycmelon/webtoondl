@@ -4,8 +4,8 @@ import sys
 from termcolor import colored, cprint
 import table
 
-version = "1.0.1"
-sys.stdout.write(f"\x1b]2;{'Webtoondl v'}{version}\x07")
+version = "1.1.0"
+sys.stdout.write(f"\x1b]2;{'WEBTOONDL v'}{version}\x07")
 
 
 def clear():
