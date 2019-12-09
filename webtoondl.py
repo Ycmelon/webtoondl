@@ -283,13 +283,17 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         for folder in loading_bar(episode_folders, "pdfs"):
             filenames = glob.glob(
                 f"{working_dir}/{folder}/*.{webtoon_filetype}")
-            image_nos = [filename.split("\\")[-1].split(".")[0]
+            image_nos = [int(filename.split("\\")[-1].split(".")[0].split("-")[1])
                          for filename in filenames]
             filenames = dict(zip(filenames, image_nos))
-            sorted_filenames = list(
-                zip(*sorted(filenames.items(), key=lambda kv: kv[1])))[0]
+
+            # Sorting
+            temp = list(zip(image_nos, filenames))
+            temp = sorted(temp, key=lambda kv: kv[0])
+            temp = list(zip(*temp))[1]
+
             with open(os.path.join(working_dir, f"{folder}.pdf"), "wb") as file:
-                file.write(img2pdf.convert(sorted_filenames))
+                file.write(img2pdf.convert(temp))
                 logging.info(f"Finished saving episode {folder} PDF")
 
         # Returning
@@ -340,6 +344,3 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         shutil.rmtree(working_dir)
 
     return return_output
-
-
-get_last_episode(262985, True)
