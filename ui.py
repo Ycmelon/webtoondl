@@ -1,18 +1,28 @@
 import webtoondl
 import os
+from termcolor import colored, cprint
 
-version = "1.0.0"
+version = "1.0.1"
 
-print(f"WEBTOONDL v{version} by Ycmelon")
-print("Github: https://github.com/Ycmelon/webtoondl")
+# Header
+print(
+    f"{colored(f'WEBTOONDL v{version}', 'green', attrs=['bold'])} by Ycmelon https://github.com/Ycmelon/webtoondl")
+print()
+
 # Getting webtoon information
-search_query = input("Webtoon name: ")
+print(colored("Webtoon name: ", "cyan"))
+search_query = input()
+print()
 search_results = webtoondl.search_webtoon(search_query)
 search_results["originals"].extend(search_results["canvas"])
 search_results = search_results["originals"]
 
 for index, result in enumerate(search_results):
-    print(f"{index}: {result[2]} by {result[3]} ({result[4]} likes)")
+    index = colored(index, 'yellow', attrs=['bold'])
+    title = colored(result[2], 'white')
+    author = colored(result[3], 'white')
+    likes = colored(f"{result[4]} ♥", 'white', 'on_green')
+    print(f"{index}: {title} by {author} ({likes})")
 
 selected_webtoon = search_results[int(input("Select: "))]
 
