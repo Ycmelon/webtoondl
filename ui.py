@@ -21,11 +21,15 @@ def print_header():
 
 # Getting webtoon information
 print_header()
-print(colored("Webtoon name: ", "cyan"))
-search_query = input()
-print()
+search_results = False
+while search_results == False:
+    print(colored("Webtoon name: ", "cyan"))
+    search_query = input()
+    print()
+    search_results = webtoondl.search_webtoon(search_query)
+    if search_results == False:
+        print(colored("No webtoons found! Try again.", "red"))
 
-search_results = webtoondl.search_webtoon(search_query)
 search_results["originals"].extend(search_results["canvas"])
 search_results = search_results["originals"]
 print_list = []
@@ -33,10 +37,20 @@ for index, result in enumerate(search_results):
     index = colored(index, 'yellow', attrs=['bold'])
     title = colored(result[2], 'white')
     author = colored(result[3], 'white')
-    likes = colored(f"{result[4]} ♥", 'white', 'on_green')
+    likes = colored(f"♥ {result[4]}", 'white', 'on_green')
     print_list.append([index, title, author, likes])
 table.table(print_list)
-selected_webtoon = search_results[int(input("Select: "))]
+
+input_valid = False
+while input_valid == False:
+    print()
+    selected_webtoon = input("Select: ")
+    try:
+        selected_webtoon = search_results[int(selected_webtoon)]
+        input_valid = True
+    except Exception:
+        print(colored("Invalid input! Try again.", "red"))
+
 title_no = selected_webtoon[0]
 if selected_webtoon[5] == "canvas":
     canvas = True
@@ -50,24 +64,40 @@ print(colored("Webtoon name: ", "cyan"))
 print(selected_webtoon[2])
 print()
 
-print(f"{colored('First episode to download:', 'cyan')} (e.g. first, 6)")
-range_start = input()
-print()
-if range_start == "first":
-    range_start = 1
-else:
-    range_start = int(range_start)
+input_valid = False
+while input_valid == False:
+    print(f"{colored('First episode to download:', 'cyan')} (e.g. first, 6)")
+    range_start = input()
+    print()
+    if range_start == "first":
+        range_start = 1
+        input_valid = True
+    else:
+        try:
+            range_start = int(range_start)
+            input_valid = True
+        except Exception:
+            print(colored("Invalid input! Try again.", "red"))
 
-print(f"{colored('Last episode to download:', 'cyan')} (e.g. last, 37)")
-range_end = input()
-print()
-if range_end == "last":
-    range_end = int(webtoondl.get_last_episode(title_no, canvas))
-else:
-    range_end = int(range_end)
-    if range_end > int(webtoondl.get_last_episode(title_no, canvas)):
-        print("Last episode number too large! Defaulting to last episode")
+
+input_valid = False
+while input_valid == False:
+    print(f"{colored('Last episode to download:', 'cyan')} (e.g. last, 37)")
+    range_end = input()
+    print()
+    if range_end == "last":
         range_end = int(webtoondl.get_last_episode(title_no, canvas))
+        input_valid = True
+    else:
+        try:
+            range_end = int(range_end)
+            input_valid = True
+            if range_end > int(webtoondl.get_last_episode(title_no, canvas)):
+                print("Last episode number too large! Defaulting to last episode")
+                range_end = int(webtoondl.get_last_episode(title_no, canvas))
+        except Exception:
+            print(colored("Invalid input! Try again.", "red"))
+
 
 download_range = range(range_start, range_end+1)
 
