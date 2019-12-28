@@ -52,6 +52,7 @@ while input_valid == False:
         print(colored("Invalid input! Try again.", "red"))
 
 title_no = selected_webtoon[0]
+title = selected_webtoon[2]
 if selected_webtoon[5] == "canvas":
     canvas = True
 elif selected_webtoon[5] == "original":
