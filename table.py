@@ -1,4 +1,10 @@
 def table(vars):
+    """Prints a table for a 2 dimensional iterable
+
+    Args:
+        vars(iterable): Variables to create table for
+    """
+
     width = len(vars[0])
     max_lengths = [0 for _ in range(width)]
     for row in vars:
