@@ -13,7 +13,7 @@ from datetime import datetime
 
 output_folder = "output"
 webtoon_filetype = "jpg"  # if changed in future (WEBP revolution???)
-bs4_htmlparser = "html.parser"  # other os
+bs4_htmlparser = "html.parser"
 image_urls_savelocation = "image_urls.dat"
 progress_savelocation = "progress.dat"
 

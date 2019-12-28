@@ -1,31 +1,34 @@
-import webtoondl
 import os
 import sys
-from termcolor import colored, cprint
 import table
+import webtoondl
+from termcolor import colored, cprint
 
-version = "1.1.0"
+version = "1.1.1"
 sys.stdout.write(f"\x1b]2;{'WEBTOONDL v'}{version}\x07")
 
 
 def clear():
-    os.system("clear")
     os.system("cls")
+
+
+def newline():
+    print()
 
 
 def print_header():
     print(
         f"{colored(f'WEBTOONDL v{version}', 'green', attrs=['bold'])} by Ycmelon https://github.com/Ycmelon/webtoondl")
-    print()
+    newline()
 
 
 # Getting webtoon information
 print_header()
 search_results = False
-while search_results == False:
+while not search_results:
     print(colored("Webtoon name: ", "cyan"))
     search_query = input()
-    print()
+    newline()
     search_results = webtoondl.search_webtoon(search_query)
     if search_results == False:
         print(colored("No webtoons found! Try again.", "red"))
@@ -43,7 +46,7 @@ table.table(print_list)
 
 input_valid = False
 while input_valid == False:
-    print()
+    newline()
     selected_webtoon = input("Select: ")
     try:
         selected_webtoon = search_results[int(selected_webtoon)]
@@ -63,13 +66,13 @@ clear()
 print_header()
 print(colored("Webtoon name: ", "cyan"))
 print(selected_webtoon[2])
-print()
+newline()
 
 input_valid = False
 while input_valid == False:
     print(f"{colored('First episode to download:', 'cyan')} (e.g. first, 6)")
     range_start = input()
-    print()
+    newline()
     if range_start == "first":
         range_start = 1
         input_valid = True
@@ -85,7 +88,7 @@ input_valid = False
 while input_valid == False:
     print(f"{colored('Last episode to download:', 'cyan')} (e.g. last, 37)")
     range_end = input()
-    print()
+    newline()
     if range_end == "last":
         range_end = int(webtoondl.get_last_episode(title_no, canvas))
         input_valid = True
@@ -105,17 +108,17 @@ download_range = range(range_start, range_end+1)
 # Getting output format
 print(f"{colored('Output format:', 'cyan')} (combined, separate, images)")
 output_format = input().lower()
-print()
+newline()
 
 # Downloading
 clear()
 print_header()
 print(colored("Downloading:", "cyan"))
 print(f"{title} Episodes {download_range[0]}-{download_range[-1]}")
-print()
+newline()
 print(colored("Output format:", "cyan"))
 print(output_format)
-print()
+newline()
 output_location = webtoondl.download(
     title_no, download_range, output=output_format, clean=False)
 
@@ -123,10 +126,10 @@ clear()
 print_header()
 print(colored("Downloading:", "cyan"))
 print(f"{title} Episodes {download_range[0]}-{download_range[-1]}")
-print()
+newline()
 print(colored("Output format:", "cyan"))
 print(output_format)
-print()
+newline()
 print(colored("Completed! Output location:", "cyan"))
 print(output_location)
 input()
