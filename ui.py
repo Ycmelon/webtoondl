@@ -56,10 +56,6 @@ while input_valid == False:
 
 title_no = selected_webtoon[0]
 title = selected_webtoon[2]
-if selected_webtoon[5] == "canvas":
-    canvas = True
-elif selected_webtoon[5] == "original":
-    canvas = False
 
 # Getting episode information
 clear()
@@ -90,15 +86,15 @@ while input_valid == False:
     range_end = input()
     newline()
     if range_end == "last":
-        range_end = int(webtoondl.get_last_episode(title_no, canvas))
+        range_end = int(webtoondl.get_last_episode(title_no))
         input_valid = True
     else:
         try:
             range_end = int(range_end)
             input_valid = True
-            if range_end > int(webtoondl.get_last_episode(title_no, canvas)):
+            if range_end > int(webtoondl.get_last_episode(title_no)):
                 print("Last episode number too large! Defaulting to last episode")
-                range_end = int(webtoondl.get_last_episode(title_no, canvas))
+                range_end = int(webtoondl.get_last_episode(title_no))
         except Exception:
             print(colored("Invalid input! Try again.", "red"))
 

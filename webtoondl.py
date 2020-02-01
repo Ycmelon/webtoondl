@@ -6,9 +6,10 @@ import logging
 import img2pdf
 import requests
 from tqdm import tqdm
-from bs4 import BeautifulSoup
 from zipfile import ZipFile
 from datetime import datetime
+from bs4 import BeautifulSoup
+from functools import lru_cache
 
 
 output_folder = "output"
@@ -18,6 +19,7 @@ image_urls_savelocation = "image_urls.dat"
 progress_savelocation = "progress.dat"
 
 
+@lru_cache
 def is_canvas(title_no):
     """Returns whether given title number is CANVAS
 
@@ -62,17 +64,16 @@ def loading_bar(iterable, unit):
     return tqdm(iterable, unit=unit, ncols=100)
 
 
-def get_title(title_no, canvas):
+def get_title(title_no):
     """Gets title for given title number
 
     Args:
         title_no(str): Title number of series to get title of
-        canvas(bool): Whether series is canvas or not
 
     Returns:
         str: Title of given series number
     """
-    url = get_full_url(title_no, canvas)
+    url = get_full_url(title_no)
     webpage = requests.get(url).content
 
     title = str(webpage).split('<title>')[1].split('</title>')[0]
@@ -81,19 +82,18 @@ def get_title(title_no, canvas):
     return title
 
 
-def get_full_url(title_no, canvas, episode_no=0):
+def get_full_url(title_no, episode_no=0):
     """Gets full URL for given title and episode numbers
 
     Args:
         title_no(str): Title number of series to get URL for
-        canvas(bool): Whether the given series is CANVAS or not
         episode_no(str): Episode number to get URL for
 
     Retuns:
         str: Full URL given the title and episode numbers
     """
 
-    if canvas:
+    if is_canvas(title_no):
         genre = "challenge"
     else:
         genre = "fantasy"
@@ -154,18 +154,17 @@ def search_webtoon(query):
     return results
 
 
-def get_last_episode(title_no, canvas):
+def get_last_episode(title_no):
     """Get last episode number
 
     Args:
         title_no(str): Title number of series
-        canvas(bool): Whether given series is canvas or not
 
     Returns:
         str: Last episode number
     """
 
-    url = get_full_url(title_no, canvas)
+    url = get_full_url(title_no)
     soup = BeautifulSoup(requests.get(url).content, features=bs4_htmlparser)
     last_episode = soup.find(id="_listUl").find("li")["data-episode-no"]
 
@@ -196,13 +195,13 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
 
     download_range = list(download_range)
     canvas = is_canvas(title_no)
-    title = get_title(title_no, canvas)
+    title = get_title(title_no)
     document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
     if unique:
         id_ = datetime.now().strftime("%d%m%Y%H%M%S%f")
         document_name = f"{document_name} {id_}"
     request_headers = {'User-agent': 'Mozilla/5.0',
-                       "Referer": get_full_url(title_no, canvas, "1")}
+                       "Referer": get_full_url(title_no, "1")}
 
     if not working_dir:
         working_dir = os.path.join(output_folder, document_name)
@@ -225,7 +224,7 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         logging.info("Generating image URLs")
         image_urls = {}
         for episode_no in loading_bar(download_range, "links"):
-            url = get_full_url(title_no, canvas, episode_no)
+            url = get_full_url(title_no, episode_no)
             if requests.get(url).status_code == 404:
                 logging.info(f"404 for episode {episode_no}")
                 download_range.append(download_range[-1]+1)
