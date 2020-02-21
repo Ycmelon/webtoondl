@@ -14,10 +14,10 @@ from collections import defaultdict
 
 
 output_folder = "output"
-webtoon_filetype = "jpg"  # if changed in future (WEBP revolution???)
+webtoon_filetype = "jpg"  # if changed in future
 bs4_htmlparser = "html.parser"
-image_urls_savelocation = "image_urls.dat"
-progress_savelocation = "progress.dat"
+image_urls_dat = "image_urls.dat"
+progress_dat = "progress.dat"
 
 
 @lru_cache
@@ -34,21 +34,15 @@ def is_canvas(title_no):
         ValueError: Webtoon title number is not found
     """
 
-    # Not canvas
-    output = False
     url = f"https://www.webtoons.com/en/fantasy/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no=1"
+    if requests.get(url).status_code == 200:
+        return False
 
-    # Canvas
-    if requests.get(url).status_code == 404:
-        url = f"https://www.webtoons.com/en/challenge/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no=1"
-        output = True
+    url = f"https://www.webtoons.com/en/challenge/castle-swimmer/extra-episode-3/viewer?title_no={title_no}&episode_no=1"
+    if requests.get(url).status_code == 200:
+        return True
 
-    # Error
-    if requests.get(url).status_code == 404:
-        output = False
-        raise ValueError("Webtoon not found!")
-
-    return output
+    raise ValueError("Webtoon not found!")
 
 
 def loading_bar(iterable, unit):
@@ -118,39 +112,32 @@ def search_webtoon(query):
         dict: Dictionary containing the search results
     """
 
-    url = f"https://www.webtoons.com/search?keyword={query}"
-    url = requests.utils.requote_uri(url)
-
+    url = requests.utils.requote_uri(
+        f"https://www.webtoons.com/search?keyword={query}")
     soup = BeautifulSoup(requests.get(url).content, features=bs4_htmlparser)
+
+    # No results
     if soup.find(class_="card_nodata"):
         return False
 
-    results = {"originals": [], "canvas": []}
+    links = []
     # If originals results present
     if soup.find(class_="card_lst"):
-        for a in soup.find(class_="card_lst").find_all("a"):
-            title_no_ = a["href"].split("=")[1]
-            img_src = a.find("img")["src"]
-            subj = a.find(class_="subj").text
-            author = a.find(class_="author").text
-            likes = a.find(class_="grade_num").text
-            if likes == "Like":
-                likes = 0
-            results["originals"].append(
-                [title_no_, img_src, subj, author, likes, "original"])
-
+        links += soup.find(class_="card_lst").find_all("a")
     # If canvas results present
     if soup.find(class_="challenge_lst"):
-        for a in soup.find(class_="challenge_lst").find("ul").find_all("a"):
-            title_no_ = a["href"].split("=")[1]
-            img_src = a.find("img")["src"]
-            subj = a.find(class_="subj").text
-            author = a.find(class_="author").text
-            likes = a.find(class_="grade_num").text
-            if likes == "Like":
-                likes = 0
-            results["canvas"].append(
-                [title_no_, img_src, subj, author, likes, "canvas"])
+        links += soup.find(class_="challenge_lst").find("ul").find_all("a")
+
+    results = []
+    for link in links:
+        title_no = link["href"].split("=")[1]
+        img_src = link.find("img")["src"]
+        subj = link.find(class_="subj").text
+        author = link.find(class_="author").text
+        likes = link.find(class_="grade_num").text
+        if likes == "Like":
+            likes = 0
+        results.append([title_no, img_src, subj, author, likes])
 
     return results
 
@@ -172,7 +159,7 @@ def get_last_episode(title_no):
     return last_episode
 
 
-def download(title_no, download_range, output="combined", working_dir=False, clean=True, unique=False):
+def download(title_no, download_range, output="combined", clean=False, unique=False):
     """Download webtoons
 
     Args:
@@ -182,7 +169,6 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
             "combined": Combined PDF
             "separate": Zipped separate PDFs
             "images": Zipped image files
-        working_dir(str): Custom working directory
         clean(bool): Whether to cleanup working files
         unique(bool): Whether to create custom ID for unique filename
 
@@ -194,153 +180,113 @@ def download(title_no, download_range, output="combined", working_dir=False, cle
         Exception: Status code 200 for request
     """
 
-    download_range = list(download_range)
-    canvas = is_canvas(title_no)
-    title = get_title(title_no)
-    document_name = f"{title} Episodes {download_range[0]}-{download_range[-1]}"
-    if unique:
-        id_ = datetime.now().strftime("%d%m%Y%H%M%S%f")
-        document_name = f"{document_name} {id_}"
+    if not type(download_range) == list:
+        download_range = list(download_range)
+
+    id_ = datetime.now().strftime(" %d%m%Y%H%M%S%f") if unique else ""
+    document_name = f"{get_title(title_no)} Episodes {download_range[0]}-{download_range[-1]}{id_}"
+    image_urls = defaultdict(list)
+    progress = 0
     request_headers = {'User-agent': 'Mozilla/5.0',
                        "Referer": get_full_url(title_no, episode_no="1")}
 
-    if not working_dir:
-        working_dir = os.path.join(output_folder, document_name)
+    working_dir = os.path.join(output_folder, document_name)
+    os.makedirs(working_dir, exist_ok=True)
 
-    if not os.path.exists(working_dir):
-        os.makedirs(working_dir)
-        with open(os.path.join(working_dir, "latest.log"), "w") as file:
-            pass
+    # Check for progress
+    if os.path.exists(os.path.join(working_dir, progress_dat)):
+        with open(os.path.join(working_dir, progress_dat), "r") as f:
+            progress = f.read().split("\n")
+            progress.remove("")
+            progress = int(progress[-1])
 
-    logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s',
-                        filename=os.path.join(working_dir, "latest.log"), level=logging.INFO)
-    logging.info("Started")
+    if os.path.exists(os.path.join(working_dir, image_urls_dat)):
+        with open(os.path.join(working_dir, image_urls_dat), "rb") as f:
+            image_urls = pickle.load(f)
 
-    # Getting image URLs
-    if os.path.exists(os.path.join(working_dir, image_urls_savelocation)):
-        with open(os.path.join(working_dir, image_urls_savelocation), "rb") as file:
-            image_urls = pickle.load(file)
-        logging.info("Image URLs loaded")
-    else:
-        logging.info("Generating image URLs")
-        image_urls = defaultdict(list)
+    # Get image urls
+    if image_urls == defaultdict(list):
         for episode_no in loading_bar(download_range, "links"):
             url = get_full_url(title_no, episode_no)
             request = requests.get(url)
             if request.status_code == 404:
-                logging.info(f"404 for episode {episode_no}")
                 download_range.append(download_range[-1]+1)
                 continue
             soup = BeautifulSoup(request.content, features=bs4_htmlparser)
             for img in soup.find(id="_imageList").find_all("img"):
                 image_urls[episode_no].append(img.get("data-url"))
-        logging.info("Finished generating image URLs")
 
-        with open(os.path.join(working_dir, image_urls_savelocation), "wb") as file:
+        # Save progress
+        with open(os.path.join(working_dir, image_urls_dat), "wb") as file:
             pickle.dump(image_urls, file)
-        logging.info("Saved image URLs to file")
 
-    # Saving files
-    if os.path.exists(os.path.join(working_dir, progress_savelocation)):
-        with open(os.path.join(working_dir, progress_savelocation), "r") as progress_file:
-            progress = progress_file.read().split("\n")
-            progress.remove("")
-            progress = [int(episode_no) for episode_no in progress]
-            if not progress == None:
-                for finished_ep in progress:
-                    del image_urls[finished_ep]
+    episode_lengths = {}
+    for episode, urls in image_urls.items():
+        episode_lengths[episode] = len(urls)
 
-    logging.info("Downloading images")
-    with open(os.path.join(working_dir, progress_savelocation), "a+") as progress_file:
-        for episode_no, image_urls in loading_bar(image_urls.items(), "episodes"):
-            # Create episode folder
-            if not os.path.exists(os.path.join(working_dir, str(episode_no))):
-                os.makedirs(os.path.join(working_dir, str(episode_no)))
-
-            for index, image_url in enumerate(image_urls):
-                filename = f"{episode_no}-{index}.{webtoon_filetype}"
+    # Get images
+    if not progress == 0:
+        for key in range(1, progress+1):
+            image_urls.pop(key, None)
+    with open(os.path.join(working_dir, progress_dat), "a+") as f:
+        for episode_no, urls in image_urls.items():
+            os.makedirs(os.path.join(
+                working_dir, str(episode_no)), exist_ok=True)
+            for index, image_url in enumerate(urls):
+                filename = f"{index}.{webtoon_filetype}"
                 request = requests.get(
                     image_url, stream=True, headers=request_headers)
                 if request.status_code == 200:
                     with open(os.path.join(working_dir, str(episode_no), filename), 'wb') as file:
                         request.raw.decode_content = True
                         shutil.copyfileobj(request.raw, file)
-                        logging.info(
-                            f"File {filename} downloaded successfully")
                 else:
-                    logging.warning(f"Request error: {request.status_code}")
                     raise Exception(f"Request error: {request.status_code}")
-            progress_file.write(f"\n{episode_no}")
+            f.write(str(episode_no)+"\n")
 
-    # Saving
-    logging.info("Saving files")
-    episode_folders = download_range
-
+    # Output
     if output == "images":
         output_path = os.path.join(output_folder, f"{document_name}.zip")
         with ZipFile(output_path, "w") as output_archive:
-            for jpg in glob.glob(f"{working_dir}/**/*.{webtoon_filetype}"):
-                output_archive.write(jpg, jpg.split(document_name)[1])
+            for episode, length in episode_lengths.items():
+                for image in range(length):
+                    output_archive.write(os.path.join(working_dir, str(episode), f"{image}.{webtoon_filetype}"),
+                                         os.path.join(str(episode), f"{image}.{webtoon_filetype}"))
         return_output = output_path
-        logging.info("Zipped archive")
+
+    elif output == "separate":
+        for episode, length in episode_lengths.items():
+            image_list = []
+            for image in range(length):
+                image_list.append(os.path.join(working_dir, str(
+                    episode), f"{image}.{webtoon_filetype}"))
+            with open(os.path.join(working_dir, f"{episode}.pdf"), "wb") as file:
+                file.write(img2pdf.convert(image_list))
+
+        # Returning
+        output_path = os.path.join(output_folder, f"{document_name}.zip")
+        with ZipFile(output_path, "w") as output_archive:
+            for episode in episode_lengths.keys():
+                output_archive.write(os.path.join(
+                    working_dir, f"{episode}.pdf"), f"{episode}.pdf")
+
+    elif output == "combined":
+        image_list = []
+        for episode, length in episode_lengths.items():
+            for image in range(length):
+                image_list.append(os.path.join(working_dir, str(
+                    episode), f"{image}.{webtoon_filetype}"))
+
+        output_path = os.path.join(output_folder, f"{document_name}.pdf")
+        with open(output_path, "wb") as file:
+            file.write(img2pdf.convert(image_list))
     else:
-        if output == "separate":
-            for folder in loading_bar(episode_folders, "pdfs"):
-                filenames = glob.glob(
-                    f"{working_dir}/{folder}/*.{webtoon_filetype}")
-                image_nos = [int(filename.split("\\")[-1].split(".")[0].split("-")[1])
-                             for filename in filenames]
-                filenames = dict(zip(filenames, image_nos))
-
-                # Sorting
-                temp = list(zip(image_nos, filenames))
-                temp = sorted(temp, key=lambda kv: kv[0])
-                temp = list(zip(*temp))[1]
-
-                with open(os.path.join(working_dir, f"{folder}.pdf"), "wb") as file:
-                    file.write(img2pdf.convert(temp))
-                    logging.info(f"Finished saving episode {folder} PDF")
-
-            # Returning
-            output_path = os.path.join(output_folder, f"{document_name}.zip")
-            with ZipFile(output_path, "w") as output_archive:
-                for pdf in glob.glob(f"{working_dir}/*.pdf"):
-                    output_archive.write(pdf, pdf.split(working_dir)[1])
-            return_output = output_path
-            logging.info("Zipped archive")
-
-        elif output == "combined":
-            all_filenames = []
-            for folder in episode_folders:
-                filenames = glob.glob(
-                    f"{working_dir}/{folder}/*.{webtoon_filetype}")
-                image_nos = [int(filename.split("\\")[-1].split(".")[0].split("-")[1])
-                             for filename in filenames]
-
-                # Sorting
-                temp = list(zip(image_nos, filenames))
-                temp = sorted(temp, key=lambda kv: kv[0])
-                temp = list(zip(*temp))[1]
-
-                all_filenames.extend(temp)
-
-            output_path = os.path.join(output_folder, f"{document_name}.pdf")
-            with open(output_path, "wb") as file:
-                file.write(img2pdf.convert(all_filenames))
-                logging.info(f"Finished saving {document_name} PDF")
-            return_output = output_path
-
-        else:
-            logging.error("Output option not recognised!")
-            raise ValueError("Output option not recognised!")
-
-    logging.info("Complete, exiting")
-    logging.shutdown()
+        raise ValueError("Unrecognised output type!")
 
     if clean:
         shutil.rmtree(working_dir)
 
-    return return_output
+    return output_path
 
 
-download(70280, range(1, 10), output="separate")
+download(70280, range(1, 10), output="combined")

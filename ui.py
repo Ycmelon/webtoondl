@@ -4,7 +4,7 @@ import table
 import webtoondl
 from termcolor import colored, cprint
 
-version = "1.1.1"
+version = "1.2.0"
 sys.stdout.write(f"\x1b]2;{'WEBTOONDL v'}{version}\x07")
 
 
@@ -33,8 +33,6 @@ while not search_results:
     if search_results == False:
         print(colored("No webtoons found! Try again.", "red"))
 
-search_results["originals"].extend(search_results["canvas"])
-search_results = search_results["originals"]
 print_list = []
 for index, result in enumerate(search_results):
     index = colored(index, 'yellow', attrs=['bold'])
@@ -116,7 +114,7 @@ print(colored("Output format:", "cyan"))
 print(output_format)
 newline()
 output_location = webtoondl.download(
-    title_no, download_range, output=output_format, clean=False)
+    title_no, download_range, output=output_format, clean=True)
 
 clear()
 print_header()
