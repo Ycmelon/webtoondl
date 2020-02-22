@@ -1,4 +1,5 @@
 # Webtoondl
+[![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Ycmelon/webtoondl/blob/master/LICENSE) [![Python version](https://img.shields.io/badge/Python-3.8-Blue.svg)](https://shields.io/)
 Webtoondl is a Python script for Webtoon downloading.
 
 ## Usage
