@@ -1,5 +1,5 @@
 <p align="center">
-	<img alt="Webtoondl" title="Webtoondl" src="https://raw.githubusercontent.com/Ycmelon/webtoondl/master/logo/logo.png" width="200px"/>
+	<img alt="Webtoondl" title="Webtoondl" src="logo/logo.png" width="200px"/>
 </p>
 
 <h1 align="center">
@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-	<a href="https://github.com/Ycmelon/webtoondl/blob/master/LICENSE"><img alt="GitHub licence" src="https://img.shields.io/github/license/Ycmelon/webtoondl?color=00D564"></a>
+	<a href="master/LICENSE"><img alt="GitHub licence" src="https://img.shields.io/github/license/Ycmelon/webtoondl?color=00D564"></a>
 	<img alt="Python version" src="https://img.shields.io/badge/Python-3.8-00D564.svg">
 </p>
 
