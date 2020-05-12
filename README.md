@@ -15,6 +15,9 @@
 	Python script for downloading Webtoons
 </p>
 
+# CURRENTLY WIP!!
+May not work as intended!
+
 ## Usage
 ```python
 import webtoondl
