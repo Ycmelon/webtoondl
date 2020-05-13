@@ -1,34 +1,33 @@
-<p align="center">
-	<img alt="Webtoondl" title="Webtoondl" src="logo/logo.png" width="200px"/>
-</p>
+# Webtoondl
 
-<h1 align="center">
-	Webtoondl
-</h1>
+![GitHub licence](https://img.shields.io/github/license/Ycmelon/webtoondl?color=00D564)
+![Python version](https://img.shields.io/badge/Python-3.8-00D564.svg)
 
-<p align="center">
-	<a href="master/LICENSE"><img alt="GitHub licence" src="https://img.shields.io/github/license/Ycmelon/webtoondl?color=00D564"></a>
-	<img alt="Python version" src="https://img.shields.io/badge/Python-3.8-00D564.svg">
-</p>
+Python script for downloading webcomics
 
-<p align="center">
-	Python script for downloading Webtoons
-</p>
+## Supported websites
 
-# CURRENTLY WIP!!
-May not work as intended!
+- webtoons.com
+- mangago.me
+
+## Installation
+
+WIP (clone and unzip this respository?)
 
 ## Usage
-```python
-import webtoondl
-webtoondl.download(title_no=70280, download_range=range(1, 132), output="combined")
-	# title_no: Webtoon ID
-	# download_range: Episodes to download
-	# output: Output format (combined, separate, images)
+
+```
+>>> python main.py download --help
 ```
 
 ## Contributing
+
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
+## Credits
+
+WIP
+
 ## License
+
 [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/)
