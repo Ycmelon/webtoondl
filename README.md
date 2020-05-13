@@ -17,10 +17,10 @@ WIP (clone and unzip this respository?)
 ## Usage
 
 ```
->>> python main.py download --help
+python main.py download --help
 ```
 
-[Command line reference](https://github.com/Ycmelon/webtoondl/wiki/Command-line-reference)
+[Wiki documentation](https://github.com/Ycmelon/webtoondl/wiki/webtoondl-download)
 
 ## Contributing
 
