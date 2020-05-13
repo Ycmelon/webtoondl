@@ -12,7 +12,8 @@ Python script for downloading webcomics
 
 ## Installation
 
-WIP (clone and unzip this respository?)
+- Clone this respository
+- [requirements.txt](/requirements.txt)
 
 ## Usage
 
