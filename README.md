@@ -5,7 +5,7 @@
 
 Python script for downloading webcomics
 
-## Supported websites
+## Supported sources
 
 - webtoons.com [:page_facing_up:](https://github.com/Ycmelon/webtoondl/wiki/Webtoon.com)
 - mangago.me [:page_facing_up:](https://github.com/Ycmelon/webtoondl/wiki/Mangago.me)
