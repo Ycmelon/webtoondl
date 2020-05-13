@@ -20,6 +20,8 @@ WIP (clone and unzip this respository?)
 >>> python main.py download --help
 ```
 
+[Command line reference](https://github.com/Ycmelon/webtoondl/wiki/Command-line-reference)
+
 ## Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
