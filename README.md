@@ -10,6 +10,8 @@ Python script for downloading webcomics
 - webtoons.com [:page_facing_up:](https://github.com/Ycmelon/webtoondl/wiki/Webtoon.com)
 - mangago.me [:page_facing_up:](https://github.com/Ycmelon/webtoondl/wiki/Mangago.me)
 
+... todo!
+
 ## Installation
 
 - Clone this respository
