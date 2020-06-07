@@ -3,13 +3,21 @@ import requests
 from pkg_resources import parse_version
 
 
-def get_latest_version(pkg_name):
-    url = f'https://pypi.python.org/pypi/{pkg_name}/json'
+def get_latest_version(package_name: str) -> str:
+    """Get latest version of given pypi package
+
+    Args:
+        package_name(str)
+
+    Returns:
+        str
+    """
+    url = f'https://pypi.python.org/pypi/{package_name}/json'
     releases = json.loads(requests.get(url).text)['releases']
     return sorted(releases, key=parse_version, reverse=True)[0]
 
 
-def pathsafe(path: str):
+def pathsafe(path: str) -> str:
     """Makes path safe/allowed
 
     Args:
