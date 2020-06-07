@@ -9,8 +9,10 @@ import output
 import downloader
 import sources
 from sources import *
-sources = sources.__all__
 
+import utils
+
+sources = sources.__all__
 # Logging (WIP)
 # log_format = "%(asctime)s::%(levelname)s::%(lineno)d::%(message)s"
 
@@ -41,6 +43,8 @@ def download(source, series, output_format, output_folder, range_start, range_en
     # Input validation
     if not source in sources:
         raise ValueError(f"Unrecognised source \"{source}\"")
+    if source == "mangago":
+        utils.cloudscraper_check()
     source_module = import_module(f"sources.{source}")
     if not source_module.is_series(series):
         raise ValueError(f"Unrecognised series \"{series}\"")
