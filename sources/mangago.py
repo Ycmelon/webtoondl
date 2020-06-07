@@ -8,6 +8,8 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
+import utils
+
 scraper = cloudscraper.create_scraper()
 session = HTMLSession()
 
@@ -34,7 +36,7 @@ def get_url(series: str, range_: Iterable, project_path: str):
     for index, a in enumerate(chapters_element.find_all("a")):
         if not index + 1 in range_:
             break
-        chapter_name = f"{index + 1}. {a.text}"
+        chapter_name = utils.pathsafe(f"{index + 1}. {a.text}")
         chapters[chapter_name] = {}
         chapters[chapter_name]["image_urls"] = []
         # Trim "1/" (first chapter)

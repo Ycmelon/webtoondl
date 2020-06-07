@@ -7,6 +7,8 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 
+import utils
+
 # Constants
 html_parser = "html.parser"
 file_format = "jpg"  # This changes! TODO
@@ -96,7 +98,8 @@ def get_url(series: str, range_: Iterable, project_path: str):
 
         soup = BeautifulSoup(request.content, features=html_parser)
 
-        chapter_name = f"{chapter}. {soup.find('h1', class_='subj_episode').text}"
+        chapter_name = utils.pathsafe(
+            f"{chapter}. {soup.find('h1', class_='subj_episode').text}")
         chapters[chapter_name] = {}
         chapters[chapter_name]["image_urls"] = []
         for img in soup.find(id="_imageList").find_all("img"):
