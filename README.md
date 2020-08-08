@@ -1,6 +1,6 @@
 # 📗 Webtoondl
 
-![Python version](https://img.shields.io/badge/Python-3.8-00D564.svg)
+![Python version](https://img.shields.io/badge/python-3.8-00D564.svg)
 ![GitHub licence](https://img.shields.io/github/license/Ycmelon/webtoondl?color=00D564)
 
 Python script for downloading webcomics
