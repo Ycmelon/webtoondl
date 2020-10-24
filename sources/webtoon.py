@@ -76,7 +76,7 @@ class Webtoon(Source):
         return url
 
     def get_url(self, series: str, range_: Iterable, project_path: str):
-        """Gets image urls for given series and range
+        """Gets image URLs for given series and range
 
         Args:
             series(str)
@@ -88,7 +88,7 @@ class Webtoon(Source):
         range_ = list(range_)
         chapters = {}
 
-        for chapter in tqdm(range_, desc="Getting chapter image urls", unit="chapters"):
+        for chapter in tqdm(range_, desc="Getting chapter image URLs", unit="chapters"):
             url = self.get_full_url(series, chapter)
             request = requests.get(url)
             if request.status_code == 404:  # Deleted episode
@@ -146,7 +146,7 @@ class Webtoon(Source):
         with open(os.path.join(project_path, "image_urls.json"), "r") as file:
             image_urls = json.load(file)
 
-        # First image url
+        # First image URL
         image_url = list(image_urls.items())[0][1]["image_urls"][0]
 
         return image_url.split(".")[-1].split("?")[0]

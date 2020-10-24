@@ -12,7 +12,7 @@ urls_key = "image_urls"
 
 
 def download(project_path: str, request_headers: dict, file_format: str):
-    """Downloads images from given image urls
+    """Downloads images from given image URLs
 
     Args:
         project_path(str)
