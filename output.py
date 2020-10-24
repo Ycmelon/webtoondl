@@ -14,7 +14,9 @@ urls_key = "image_urls"
 #                     level=logging.INFO, format=log_format)
 
 
-def output(project_name: str, project_path: str, output_folder: str, output_format: str, file_format: str):
+def output(
+    project_name: str, project_path: str, output_folder: str, output_format: str, file_format: str
+):
     """Creates output from images downloaded
 
     Args:
@@ -37,8 +39,7 @@ def output(project_name: str, project_path: str, output_folder: str, output_form
         for chapter, info in chapters.items():
             logging.info(f"Adding chapter: {chapter}")
             for page in range(len(info[urls_key])):
-                image_list.append(
-                    os.path.join(project_path, chapter, f"{page+1}.{file_format}"))
+                image_list.append(os.path.join(project_path, chapter, f"{page+1}.{file_format}"))
                 logging.info(f"Added image {str(page+1)}")
 
         with open(os.path.join(output_folder, f"{project_name}.pdf"), "wb") as file:
