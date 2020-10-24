@@ -12,8 +12,8 @@ def get_latest_version(package_name: str) -> str:
     Returns:
         str
     """
-    url = f'https://pypi.python.org/pypi/{package_name}/json'
-    releases = json.loads(requests.get(url).text)['releases']
+    url = f"https://pypi.python.org/pypi/{package_name}/json"
+    releases = json.loads(requests.get(url).text)["releases"]
     return sorted(releases, key=parse_version, reverse=True)[0]
 
 
@@ -31,6 +31,7 @@ def pathsafe(path: str) -> str:
 
 def cloudscraper_check():
     import cloudscraper
+
     latest_version = get_latest_version("cloudscraper")
     installed_version = cloudscraper.__version__
     if installed_version == latest_version:
@@ -38,4 +39,5 @@ def cloudscraper_check():
     else:
         # TODO: print --> logging.warn
         print(
-            f"Warning: Latest version of cloudscraper is {latest_version} but installed version is {cloudscraper}")
+            f"Warning: Latest version of cloudscraper is {latest_version} but installed version is {installed_version}"
+        )
