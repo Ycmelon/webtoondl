@@ -118,7 +118,7 @@ class Mangago(Source):
         soup = BeautifulSoup(scraper.get(url).text, features=html_parser)
         read_button = soup.find("a", class_="content-h1-btn yellow normal")
         # Stripping URL to just the end
-        return read_button["href"].split(series)[1]
+        return read_button["href"].split(series, 1)[1]
 
     def get_request_headers(self, series: str) -> str:
         """Get request headers for given series
