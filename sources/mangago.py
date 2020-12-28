@@ -21,7 +21,7 @@ base_url = "https://www.fashionlib.net"  # Reader site
 
 class Mangago(Source):
     def get_url(self, series: str, range_: Iterable, project_path: str):
-        """Gets image urls for given series and range
+        """Gets image URLs for given series and range
 
         Args:
             series(str)
@@ -32,12 +32,11 @@ class Mangago(Source):
         """
         first_url = f"http://www.mangago.me/read-manga/{series}{self.get_url_structure(series)}"
         soup = BeautifulSoup(scraper.get(first_url).text, features=html_parser)
-        print(first_url)
         chapters_element = soup.find("ul", class_="dropdown-menu chapter")
         chapters = {}
         for index, a in enumerate(chapters_element.find_all("a")):
             if not index + 1 in range_:
-                break
+                continue
             chapter_name = utils.pathsafe(f"{index + 1}. {a.text}")
             chapters[chapter_name] = {}
             chapters[chapter_name]["image_urls"] = []
@@ -55,11 +54,13 @@ class Mangago(Source):
                 pages_element.find_all("a")[-1].text.split("Pg ")[-1]
             )
 
-        # Get image urls
+        # Get image URLs
         for chapter, info in tqdm(
-            chapters.items(), desc="Getting chapter image urls", unit="chapters"
+            chapters.items(), desc="Getting chapter image URLs", unit="chapters"
         ):
-            for page in range(1, info["page_count"] + 1):  # +1 so 5eps, range(1, 6)
+            for page in tqdm(
+                range(1, info["page_count"] + 1), unit="images", leave=False, position=1
+            ):  # +1 so 5eps, range(1, 6)
                 full_url = base_url + info["sub_url"] + str(page)
                 r = session.get(full_url)
                 r.html.render()
@@ -144,7 +145,7 @@ class Mangago(Source):
         with open(os.path.join(project_path, "image_urls.json"), "r") as file:
             image_urls = json.load(file)
 
-        # First image url
+        # First image URL
         image_url = list(image_urls.items())[0][1]["image_urls"][0]
 
         return image_url.split(".")[-1].split("?")[0]
