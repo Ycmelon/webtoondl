@@ -42,13 +42,13 @@ def cli():
 )
 def download(source, series, output_format, output_folder, range_start, range_end):
     # Input validation
-    if not source in sources_list:
-        raise ValueError(f'Unrecognised source "{source}"')
     if source == "mangago":
         utils.cloudscraper_check()
         source_class = sources.Mangago()
     elif source == "webtoon":
         source_class = sources.Webtoon()
+    else:
+        raise ValueError(f'Unrecognised source "{source}"')
 
     if not source_class.is_series(series):
         raise ValueError(f'Unrecognised series "{series}"')
